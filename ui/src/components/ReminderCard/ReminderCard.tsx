@@ -2,9 +2,10 @@ interface ReminderCardProps {
   dark: boolean;
 
   countdown: {
-    hours: number;
-    minutes: number;
     seconds: number;
+    display: string;
+    reset: (seconds: number) => void;
+    active: boolean;
   };
 
   nextType: "Water" | "Break";
@@ -57,9 +58,7 @@ export default function ReminderCard({
                         fontVariantNumeric: "tabular-nums",
                     }}
                     >
-                    {`${String(countdown.hours).padStart(2, "0")}:${String(
-                        countdown.minutes
-                    ).padStart(2, "0")}`}
+                    {countdown.display}
                     </div>
                       <div className="flex items-center gap-1.5 mt-1.5">
                         {nextType === 'Water' ? (

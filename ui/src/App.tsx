@@ -236,121 +236,30 @@ export default function App() {
             CoffeeIcon={CoffeeIcon}
           />
 
-          {/* ── Quick Actions ─────────────────────────────────────────────── */}
-          <div className="grid grid-cols-2 gap-2.5">
-            <button
-              onClick={handleDrinkWater}
-              disabled={waterCount >= WATER_GOAL}
-              className="flex items-center justify-center gap-2 rounded-2xl py-3.5"
-              style={{
-                background: waterCount >= WATER_GOAL
-                  ? (dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)')
-                  : 'linear-gradient(135deg, #3B82F6, #2563EB)',
-                color: waterCount >= WATER_GOAL ? (dark ? '#4B5563' : '#94A3B8') : '#FFFFFF',
-                border: 'none',
-                cursor: waterCount >= WATER_GOAL ? 'not-allowed' : 'pointer',
-                boxShadow: waterCount >= WATER_GOAL ? 'none' : '0 4px 14px rgba(59,130,246,0.4)',
-                fontWeight: 600,
-                fontSize: 13,
-                fontFamily: "'Outfit', sans-serif",
-                transition: 'all 0.2s ease',
-              }}
-            >
-              <DropIcon size={16} />
-              Drink Water
-            </button>
-
-            <button
-              onClick={handleStartBreak}
-              disabled={breakCount >= BREAK_GOAL || breakActive}
-              className="flex items-center justify-center gap-2 rounded-2xl py-3.5"
-              style={{
-                background: (breakCount >= BREAK_GOAL || breakActive)
-                  ? (dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)')
-                  : 'linear-gradient(135deg, #14B8A6, #0D9488)',
-                color: (breakCount >= BREAK_GOAL || breakActive) ? (dark ? '#4B5563' : '#94A3B8') : '#FFFFFF',
-                border: 'none',
-                cursor: (breakCount >= BREAK_GOAL || breakActive) ? 'not-allowed' : 'pointer',
-                boxShadow: (breakCount >= BREAK_GOAL || breakActive) ? 'none' : '0 4px 14px rgba(20,184,166,0.4)',
-                fontWeight: 600,
-                fontSize: 13,
-                fontFamily: "'Outfit', sans-serif",
-                transition: 'all 0.2s ease',
-              }}
-            >
-              <CoffeeIcon size={16} />
-              {breakActive ? 'On break…' : 'Start Break'}
-            </button>
-          </div>
-
+          <QuickActions
+            dark={dark}
+            waterCount={waterCount}
+            breakCount={breakCount}
+            WATER_GOAL={WATER_GOAL}
+            BREAK_GOAL={BREAK_GOAL}
+            breakActive={breakActive}
+            handleDrinkWater={handleDrinkWater}
+            handleStartBreak={handleStartBreak}
+            DropIcon={DropIcon}
+            CoffeeIcon={CoffeeIcon}
+          />
           {/* ── Wellness Tip ──────────────────────────────────────────────── */}
-          <div
-            className="rounded-2xl p-4"
-            style={{
-              background: dark ? 'rgba(17,24,39,0.8)' : 'rgba(255,255,255,0.85)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
-              border: dark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(255,255,255,0.9)',
-              boxShadow: dark
-                ? '0 2px 20px rgba(0,0,0,0.3)'
-                : '0 2px 20px rgba(15,23,42,0.06)',
-            }}
-          >
-            <div className="flex items-center gap-2 mb-2">
-              <div
-                className="flex items-center justify-center rounded-lg"
-                style={{
-                  width: 28,
-                  height: 28,
-                  background: dark
-                    ? 'rgba(20,184,166,0.2)'
-                    : 'rgba(20,184,166,0.12)',
-                  border: dark ? '1px solid rgba(20,184,166,0.3)' : '1px solid rgba(20,184,166,0.2)',
-                }}
-              >
-                <LeafIcon size={14} style={{ color: dark ? '#2DD4BF' : '#14B8A6' }} />
-              </div>
-              <span
-                style={{
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: dark ? '#2DD4BF' : '#14B8A6',
-                  fontFamily: "'Outfit', sans-serif",
-                  letterSpacing: '0.04em',
-                  textTransform: 'uppercase',
-                }}
-              >
-                Wellness tip · {tip.label}
-              </span>
-            </div>
-            <p style={{ fontSize: 13, lineHeight: 1.55, color: dark ? '#CBD5E1' : '#374151', margin: 0 }}>
-              <span style={{ marginRight: 6 }}>{tip.icon}</span>
-              {tip.tip}
-            </p>
-          </div>
+          <WellnessCard
+              dark={dark}
+              tip={tip}
+              LeafIcon={LeafIcon}
+          />
 
           {/* ── Footer ───────────────────────────────────────────────────── */}
-          <div className="flex items-center justify-between pb-1 pt-0.5">
-            <button
-              className="flex items-center gap-1.5"
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                color: dark ? '#4B5563' : '#94A3B8',
-                padding: 0,
-                transition: 'color 0.2s',
-              }}
-              onMouseEnter={e => (e.currentTarget.style.color = dark ? '#9CA3AF' : '#64748B')}
-              onMouseLeave={e => (e.currentTarget.style.color = dark ? '#4B5563' : '#94A3B8')}
-            >
-              <SettingsIcon size={14} />
-              <span style={{ fontSize: 11, fontWeight: 500 }}>Settings</span>
-            </button>
-            <span style={{ fontSize: 10, color: dark ? '#374151' : '#CBD5E1', fontWeight: 500, letterSpacing: '0.02em' }}>
-              FlowBreak v1.0.0
-            </span>
-          </div>
+          <Footer
+              dark={dark}
+              SettingsIcon={SettingsIcon}
+          />
 
         </div>
       </div>
