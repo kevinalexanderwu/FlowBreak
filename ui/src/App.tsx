@@ -11,9 +11,14 @@ import ClockIcon from "./components/icons/ClockIcon";
 import DropIcon from "./components/icons/DropIcon";
 import LeafIcon from "./components/icons/LeafIcon";
 import SettingsIcon from "./components/icons/SettingsIcon";
-
-import { useGreeting } from "./hooks/useGreeting";
+import { useStorage } from "./hooks/useStorage";
+import MethodDropdown from "./components/MethodDropdown/MethodDropdown";
+import { PRODUCTIVITY_METHODS } from "./constants/productivityMethods";
 import { useCountdown } from "./hooks/useCountdown";
+import { wellnessTips } from "./constants/wellnessTips";
+import { showNotification } from "./services/notification";
+
+
 
 // ── Circular Progress ──────────────────────────────────────────────────────────
 function CircularProgress({
@@ -73,26 +78,26 @@ function CircularProgress({
 // ── Wellness Tips ─────────────────────────────────────────────────────────────
 const wellnessTips = [
   {
-    tip: "Staying hydrated improves focus by up to 14%. Your brain is 75% water.",
+    title: "Hydration",
+    text: "Staying hydrated improves focus by up to 14%. Your brain is 75% water.",
     icon: "💧",
-    label: "Hydration",
   },
   {
-    tip: "A 5-minute walk every hour reduces cardiovascular disease risk by 17%.",
+    title: "Movement",
+    text: "A 5-minute walk every hour reduces cardiovascular disease risk by 17%.",
     icon: "🚶",
-    label: "Movement",
   },
   {
-    tip: "Looking at something 20 feet away for 20 seconds every 20 minutes relieves eye strain.",
+    title: "Eye Health",
+    text: "Looking at something 20 feet away for 20 seconds every 20 minutes relieves eye strain.",
     icon: "👁️",
-    label: "Eye health",
   },
   {
-    tip: "Micro-breaks of 1–2 minutes restore alertness as effectively as longer rests.",
+    title: "Rest",
+    text: "Micro-breaks of 1–2 minutes restore alertness as effectively as longer rests.",
     icon: "⏸️",
-    label: "Rest",
   },
-]
+];
 
 // ── Countdown Hook ────────────────────────────────────────────────────────────
 function useCountdown(initialSeconds: number) {
@@ -115,20 +120,74 @@ function useCountdown(initialSeconds: number) {
 
 // ── App ───────────────────────────────────────────────────────────────────────
 export default function App() {
-  const [dark, setDark] = useState(false)
-  const [waterCount, setWaterCount] = useState(4)
-  const [breakCount, setBreakCount] = useState(2)
-  const [tipIndex] = useState(() => Math.floor(Math.random() * wellnessTips.length))
-  const [breakActive, setBreakActive] = useState(false)
-  const [waterFlash, setWaterFlash] = useState(false)
-  const [breakFlash, setBreakFlash] = useState(false)
+  const { data, loading, update } = useStorage();
 
-  const WATER_GOAL = 8
-  const BREAK_GOAL = 5
-  const NEXT_WATER_SECS = 23 * 60 + 12  // 23:12
-  const tip = wellnessTips[tipIndex]
+  const [tipIndex] = useState(() => Math.floor(Math.random() * wellnessTips.length));
+  const tip = wellnessTips[tipIndex];
+  const [breakActive, setBreakActive] = useState(false);
+  const [waterFlash, setWaterFlash] = useState(false);
+  const [breakFlash, setBreakFlash] = useState(false);
 
-  const countdown = useCountdown(NEXT_WATER_SECS)
+  const WATER_GOAL = 8;
+  const BREAK_GOAL = 5;
+
+  const WORK_SECONDS = data
+    ? (PRODUCTIVITY_METHODS.find(
+        (m) => m.id === data.productivityMethod
+      )?.workMinutes ?? 25) * 60
+    : 25 * 60;
+
+  const countdown = useCountdown(WORK_SECONDS);
+    useEffect(() => {
+    if (countdown.seconds !== 0) return;
+
+    if (nextType === "Water") {
+      showNotification(
+        "💧 Drink Water",
+        "Stay hydrated to keep your focus."
+      );
+    } else {
+      showNotification(
+        "☕ Time for a Break",
+        "Stand up, stretch, and relax for a few minutes."
+      );
+    }
+  }, [countdown.seconds]);
+  useEffect(() => {
+    if ("Notification" in window) {
+      Notification.requestPermission();
+    }
+  }, []);
+  useEffect(() => {
+    countdown.reset(WORK_SECONDS);
+  }, [WORK_SECONDS]);
+
+  if (loading || !data) {
+    return (
+      <div
+        style={{
+          width: 380,
+          height: 600,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          fontFamily: "Outfit, sans-serif",
+        }}
+      >
+        Loading...
+      </div>
+    );
+  }
+  const dark = data.darkMode;
+  const waterCount = data.waterToday;
+  const breakCount = data.breakToday;
+  const selectedMethod =
+    PRODUCTIVITY_METHODS.find(
+      (m) => m.id === data.productivityMethod
+    ) ?? PRODUCTIVITY_METHODS[0];
+
+  const BREAK_SECONDS = selectedMethod.breakMinutes * 60;
+
 
   const nextType = waterCount <= breakCount ? 'Water' : 'Break'
 
@@ -136,26 +195,39 @@ export default function App() {
     ((waterCount / WATER_GOAL + breakCount / BREAK_GOAL) / 2) * 100
   )
 
-  const handleDrinkWater = () => {
-    if (waterCount < WATER_GOAL) {
-      setWaterCount(c => c + 1)
-      setWaterFlash(true)
-      setTimeout(() => setWaterFlash(false), 600)
-      countdown.reset(25 * 60)
-    }
-  }
+  const handleDrinkWater = async () => {
+    if (waterCount >= WATER_GOAL) return;
 
-  const handleStartBreak = () => {
-    if (breakCount < BREAK_GOAL && !breakActive) {
-      setBreakActive(true)
-      setBreakFlash(true)
-      setTimeout(() => setBreakFlash(false), 600)
-      setTimeout(() => {
-        setBreakCount(c => c + 1)
-        setBreakActive(false)
-      }, 5 * 60 * 1000) // 5 min break
-    }
-  }
+    await update((old) => ({
+      ...old,
+      waterToday: old.waterToday + 1,
+      lastDrink: new Date().toISOString(),
+    }));
+
+    setWaterFlash(true);
+    setTimeout(() => setWaterFlash(false), 600);
+
+    countdown.reset(WORK_SECONDS);
+  };
+
+  const handleStartBreak = async () => {
+    if (breakCount >= BREAK_GOAL || breakActive) return;
+
+    setBreakActive(true);
+    setBreakFlash(true);
+
+    setTimeout(() => setBreakFlash(false), 600);
+
+    setTimeout(async () => {
+      await update((old) => ({
+        ...old,
+        breakToday: old.breakToday + 1,
+        lastBreak: new Date().toISOString(),
+      }));
+
+      setBreakActive(false);
+    }, 5 * 60 * 1000);
+  };
 
   const getGreeting = () => {
     const h = new Date().getHours()
@@ -207,12 +279,17 @@ export default function App() {
 
         <div className="flex flex-col gap-3 p-4 pb-2 relative z-10 animate-fade-in">
 
-          <Header
-              dark={dark}
-              greeting={getGreeting()}
-              streak={7}
-              onToggleTheme={() => setDark((d) => !d)}
-          />
+        <Header
+            dark={dark}
+            greeting={getGreeting()}
+            streak={7}
+            onToggleTheme={async () => {
+                await update((old) => ({
+                    ...old,
+                    darkMode: !old.darkMode,
+                }));
+            }}
+        />
 
           {/* ── Today's Progress ──────────────────────────────────────────── */}
           <ProgressCard
@@ -230,12 +307,32 @@ export default function App() {
             countdown={countdown}
             nextType={nextType}
             breakActive={breakActive}
-            NEXT_WATER_SECS={NEXT_WATER_SECS}
+            NEXT_WATER_SECS={WORK_SECONDS}
             ClockIcon={ClockIcon}
             DropIcon={DropIcon}
             CoffeeIcon={CoffeeIcon}
           />
+          <MethodDropdown
+              dark={dark}
+              selected={data.productivityMethod}
+              onChange={async (id) => {
 
+                  const method =
+                      PRODUCTIVITY_METHODS.find(m => m.id === id)!;
+
+                  await update(old => ({
+                      ...old,
+                      productivityMethod: id,
+                  }));
+
+                  chrome.alarms.clear("flowbreak");
+
+                  chrome.alarms.create("flowbreak", {
+                      delayInMinutes: method.workMinutes,
+                  });
+
+              }}
+          />
           <QuickActions
             dark={dark}
             waterCount={waterCount}

@@ -1,35 +1,18 @@
-import { createWaterAlarm } from "./alarm.js";
-import { showWaterNotification } from "./notifications.js";
-import { initializeStorage } from "./storage.js";
-
-console.log("🚀 FlowBreak Service Worker Started");
-
-chrome.runtime.onInstalled.addListener(async () => {
-
-    console.log("✅ Extension Installed");
-
-    await initializeStorage();
-
-    createWaterAlarm();
-
+chrome.runtime.onInstalled.addListener(() => {
+    console.log("FlowBreak installed");
 });
 
-chrome.runtime.onStartup.addListener(() => {
+chrome.alarms.onAlarm.addListener(async (alarm) => {
 
-    console.log("🚀 Browser Started");
+    if (alarm.name !== "flowbreak")
+        return;
 
-    createWaterAlarm();
-
-});
-
-chrome.alarms.onAlarm.addListener((alarm) => {
-
-    console.log("⏰ Alarm Triggered:", alarm.name);
-
-    if (alarm.name === "drink-water") {
-
-        showWaterNotification();
-
-    }
+    chrome.notifications.create({
+        type: "basic",
+        iconUrl: "assets/icons/icon128.png",
+        title: "💧 FlowBreak",
+        message: "Time to drink water!",
+        priority: 2,
+    });
 
 });
