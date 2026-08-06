@@ -1,0 +1,14 @@
+# React
+ui/node_modules/
+ui/dist/
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# VS Code
+.vscode/
+
+# Logs
+*.log

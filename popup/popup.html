@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlowBreak</title>
+
+    <link rel="stylesheet" href="popup.css">
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- Header -->
+    <header class="header">
+
+        <div class="logo">
+
+            <div class="logo-icon">
+                💧
+            </div>
+
+            <div>
+                <h1>FlowBreak</h1>
+                <p class="subtitle">
+                    Stay healthy while you work
+                </p>
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <!-- Greeting Card -->
+    <section class="card greeting-card">
+
+        <h2 id="greeting">
+            Good Afternoon 👋
+        </h2>
+
+        <p id="greeting-message">
+            Remember to stay hydrated and take regular breaks.
+        </p>
+
+    </section>
+
+
+    <!-- Progress -->
+    <section class="card">
+
+        <h3>Today's Progress</h3>
+
+        <!-- Water -->
+        <div class="progress-item">
+
+            <div class="progress-header">
+                <span>💧 Water</span>
+                <span id="water-count">0 / 8</span>
+            </div>
+
+            <div class="progress-bar">
+                <div
+                    id="water-progress"
+                    class="progress-fill"
+                    style="width:0%">
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Break -->
+        <div class="progress-item">
+
+            <div class="progress-header">
+                <span>🧘 Break</span>
+                <span id="break-count">0 / 5</span>
+            </div>
+
+            <div class="progress-bar">
+                <div
+                    id="break-progress"
+                    class="progress-fill"
+                    style="width:0%">
+                </div>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- Next Reminder -->
+    <section class="card">
+
+        <h3>Next Reminder</h3>
+
+        <div class="countdown">
+
+            <span id="countdown">
+                -- min
+            </span>
+
+        </div>
+
+    </section>
+
+
+    <!-- Quick Actions -->
+    <section class="card">
+
+        <button
+            id="drink-button"
+            class="primary-btn">
+
+            💧 Drink Water
+
+        </button>
+
+        <button
+            id="break-button"
+            class="secondary-btn">
+
+            🧘 Take Break
+
+        </button>
+
+    </section>
+
+
+    <!-- Footer -->
+    <footer>
+
+        <button
+            id="settings-button"
+            class="text-button">
+
+            ⚙ Settings
+
+        </button>
+
+    </footer>
+
+</div>
+
+<script type="module" src="popup.js"></script>
+
+</body>
+</html>

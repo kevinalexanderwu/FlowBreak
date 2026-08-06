@@ -1,0 +1,10 @@
+{
+  "description": "Helps professionals stay hydrated and take timely breaks with reminders, progress tracking, and wellness tips to boost productivity and prevent burnout.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
