@@ -23,18 +23,43 @@ export function useFlowBreak() {
     setSeconds(workSeconds);
   }, [workSeconds]);
 
-  // Countdown
+  // Countdown for UI
   useEffect(() => {
     if (seconds <= 0) return;
 
     const timer = window.setInterval(() => {
-      setSeconds((current) => Math.max(0, current - 1));
+      setSeconds((current) => {
+        if (current <= 1) {
+          return 0;
+        }
+
+        return current - 1;
+      });
     }, 1000);
 
-    return () => {
-      window.clearInterval(timer);
-    };
+    return () => window.clearInterval(timer);
   }, [seconds]);
+
+  useEffect(() => {
+    if (seconds !== 0) return;
+
+    if (breakActive) {
+      setBreakActive(false);
+      setSeconds(workSeconds);
+
+      chrome.runtime.sendMessage({
+        type: "SCHEDULE_WATER",
+        minutes: 0.5,
+      });
+    } else {
+      setSeconds(workSeconds);
+
+      chrome.runtime.sendMessage({
+        type: "SCHEDULE_WATER",
+        minutes: 0.5,
+      });
+    }
+  }, [seconds, breakActive, workSeconds]);
 
   // Reset countdown
   const resetCountdown = useCallback(() => {
@@ -42,55 +67,21 @@ export function useFlowBreak() {
     setSeconds(workSeconds);
   }, [workSeconds]);
 
-  // Chrome Extension notification
-  const sendNotification = useCallback(
-    (title: string, message: string) => {
-      if (!chrome?.notifications) {
-        console.error("Chrome Notifications API is unavailable.");
-        return;
-      }
+  // Schedule water notification through service worker
+  const scheduleWaterNotification = useCallback(() => {
+    chrome.runtime.sendMessage({
+      type: "SCHEDULE_WATER",
+      minutes: selectedMethod.workMinutes,
+    });
+  }, [selectedMethod.workMinutes]);
 
-      const manifest = chrome.runtime.getManifest();
-
-      const icons = manifest.icons
-        ? Object.values(manifest.icons)
-        : [];
-
-      const iconPath = icons[0];
-
-      if (!iconPath) {
-        console.error(
-          "No extension icon found in manifest.json"
-        );
-        return;
-      }
-
-      chrome.notifications.create(
-        {
-          type: "basic",
-          iconUrl: chrome.runtime.getURL(iconPath),
-          title,
-          message,
-          priority: 2,
-        },
-        (notificationId) => {
-          if (chrome.runtime.lastError) {
-            console.error(
-              "Notification error:",
-              chrome.runtime.lastError.message
-            );
-            return;
-          }
-
-          console.log(
-            "Notification created successfully:",
-            notificationId
-          );
-        }
-      );
-    },
-    []
-  );
+  // Schedule break notification through service worker
+  const scheduleBreakNotification = useCallback(() => {
+    chrome.runtime.sendMessage({
+      type: "SCHEDULE_BREAK",
+      minutes: selectedMethod.breakMinutes,
+    });
+  }, [selectedMethod.breakMinutes]);
 
   // Drink water
   const handleDrinkWater = useCallback(async () => {
@@ -105,40 +96,39 @@ export function useFlowBreak() {
     }));
 
     resetCountdown();
-  }, [data, update, resetCountdown]);
+
+    scheduleWaterNotification();
+  }, [
+    data,
+    update,
+    resetCountdown,
+    scheduleWaterNotification,
+  ]);
 
   // Start break
-  const handleStartBreak = useCallback(() => {
+  const handleStartBreak = useCallback(async () => {
+    if (!data) return;
     if (breakActive) return;
+
+    if (data.breakToday >= 5) return;
 
     setBreakActive(true);
     setSeconds(breakSeconds);
-  }, [breakActive, breakSeconds]);
 
-  // Timer reaches zero
-  useEffect(() => {
-    if (seconds !== 0) return;
+    scheduleBreakNotification();
+  }, [
+    data,
+    breakActive,
+    breakSeconds,
+    scheduleBreakNotification,
+  ]);
 
-    if (breakActive) {
-      sendNotification(
-        "☕ Break Finished",
-        "Your break is over. Time to get back to work."
-      );
-    } else {
-      sendNotification(
-        "💧 Time to Drink Water",
-        "Your focus session is complete. Take a moment to hydrate."
-      );
-    }
-  }, [seconds, breakActive, sendNotification]);
-
-  // Complete break automatically
+  // Complete break when countdown reaches zero
   useEffect(() => {
     if (!breakActive || seconds !== 0) return;
+    if (!data) return;
 
     const completeBreak = async () => {
-      if (!data) return;
-
       await update((old) => ({
         ...old,
         breakToday: old.breakToday + 1,
@@ -147,6 +137,8 @@ export function useFlowBreak() {
 
       setBreakActive(false);
       setSeconds(workSeconds);
+
+      scheduleWaterNotification();
     };
 
     completeBreak();
@@ -156,6 +148,7 @@ export function useFlowBreak() {
     data,
     update,
     workSeconds,
+    scheduleWaterNotification,
   ]);
 
   const display =
