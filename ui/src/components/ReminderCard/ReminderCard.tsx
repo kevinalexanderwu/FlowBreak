@@ -7,6 +7,7 @@ interface ReminderCardProps {
     reset: (seconds: number) => void;
     active: boolean;
     toggle: () => void;
+    stop: () => void;
   };
 
   nextType: "Water" | "Break";
@@ -109,20 +110,38 @@ export default function ReminderCard({
                   </div>
 
                   {/* Start / Pause */}
-                  <button
-                    onClick={countdown.toggle}
-                    className="w-full mt-3 rounded-xl py-2.5 font-semibold transition-all"
-                    style={{
-                      background: countdown.active
-                        ? (dark ? "#334155" : "#E2E8F0")
-                        : "#3B82F6",
-                      color: countdown.active
-                        ? (dark ? "#F1F5F9" : "#0F172A")
-                        : "#FFFFFF",
-                    }}
-                  >
-                    {countdown.active ? "Pause" : "Start"}
-                  </button>
+                  {/* Timer Controls */}
+                  <div className="flex gap-2 mt-3">
+                    <button
+                      onClick={countdown.toggle}
+                      className="flex-1 rounded-xl py-2.5 font-semibold transition-all"
+                      style={{
+                        background: countdown.active
+                          ? (dark ? "#334155" : "#E2E8F0")
+                          : "#3B82F6",
+                        color: countdown.active
+                          ? (dark ? "#F1F5F9" : "#0F172A")
+                          : "#FFFFFF",
+                      }}
+                    >
+                      {countdown.active ? "Pause" : "Start"}
+                    </button>
+
+                    {countdown.active && (
+                      <button
+                        onClick={countdown.stop}
+                        className="flex-1 rounded-xl py-2.5 font-semibold transition-all"
+                        style={{
+                          background: dark
+                            ? "rgba(239,68,68,0.15)"
+                            : "#FEE2E2",
+                          color: "#DC2626",
+                        }}
+                      >
+                        Stop
+                      </button>
+                    )}
+                  </div>
                 </div>
     </>
   );
