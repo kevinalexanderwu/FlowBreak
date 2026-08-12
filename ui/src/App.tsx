@@ -234,23 +234,30 @@ export default function App() {
           <MethodDropdown
               dark={dark}
               selected={data.productivityMethod}
-              onChange={async (id) => {
+          onChange={async (id) => {
+            const method =
+              PRODUCTIVITY_METHODS.find(
+                (m) => m.id === id
+              )!;
 
-                  const method =
-                      PRODUCTIVITY_METHODS.find(m => m.id === id)!;
+            await update((old) => ({
+              ...old,
 
-                  await update(old => ({
-                      ...old,
-                      productivityMethod: id,
-                  }));
+              productivityMethod: id,
 
-                  chrome.alarms.clear("flowbreak");
+              // Reset timer ke durasi metode baru
+              timerEnd: null,
+              timerSeconds: method.workMinutes * 60,
+              timerRunning: false,
+              timerMode: "work",
+            }));
 
-                  chrome.alarms.create("flowbreak", {
-                      delayInMinutes: method.workMinutes,
-                  });
+            chrome.alarms.clear("flowbreak");
 
-              }}
+            chrome.alarms.create("flowbreak", {
+              delayInMinutes: method.workMinutes,
+            });
+          }}
           />
           <QuickActions
             dark={dark}

@@ -155,7 +155,7 @@ export function useFlowBreak() {
   ]);
 
   // Reset
-  const resetCountdown = useCallback(async () => {
+  const stopTimer = useCallback(async () => {
     await update((old) => ({
       ...old,
       timerEnd: null,
@@ -166,10 +166,7 @@ export function useFlowBreak() {
 
     setSeconds(workSeconds);
     setBreakActive(false);
-  }, [
-    workSeconds,
-    update,
-  ]);
+  }, [workSeconds, update]);
 
   // Water notification
   const scheduleWaterNotification = useCallback(() => {
@@ -336,10 +333,10 @@ export function useFlowBreak() {
     countdown: {
       seconds,
       display,
-      reset: resetCountdown,
-      active:
-        data?.timerRunning ?? false,
+      reset: stopTimer,
+      active: data?.timerRunning ?? false,
       toggle: toggleTimer,
+      stop: stopTimer,
     },
 
     breakActive,
