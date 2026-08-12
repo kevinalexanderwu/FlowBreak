@@ -108,6 +108,8 @@ export default function App() {
     selectedMethod,
     handleDrinkWater,
     handleStartBreak,
+    startTimer,
+    pauseTimer,
     workSeconds,
   } = useFlowBreak();
 

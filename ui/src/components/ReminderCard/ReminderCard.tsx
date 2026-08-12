@@ -6,6 +6,7 @@ interface ReminderCardProps {
     display: string;
     reset: (seconds: number) => void;
     active: boolean;
+    toggle: () => void;
   };
 
   nextType: "Water" | "Break";
@@ -106,6 +107,22 @@ export default function ReminderCard({
                       />
                     </div>
                   </div>
+
+                  {/* Start / Pause */}
+                  <button
+                    onClick={countdown.toggle}
+                    className="w-full mt-3 rounded-xl py-2.5 font-semibold transition-all"
+                    style={{
+                      background: countdown.active
+                        ? (dark ? "#334155" : "#E2E8F0")
+                        : "#3B82F6",
+                      color: countdown.active
+                        ? (dark ? "#F1F5F9" : "#0F172A")
+                        : "#FFFFFF",
+                    }}
+                  >
+                    {countdown.active ? "Pause" : "Start"}
+                  </button>
                 </div>
     </>
   );

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import {
   loadStorage,
@@ -16,17 +16,20 @@ export function useStorage() {
     loadStorage().then(setData);
   }, []);
 
-  async function update(
-    updater: (old: FlowBreakData) => FlowBreakData
-  ) {
-    if (!data) return;
+  const update = useCallback(
+    async (
+      updater: (old: FlowBreakData) => FlowBreakData
+    ) => {
+      const current = await loadStorage();
 
-    const next = updater(data);
+      const next = updater(current);
 
-    setData(next);
+      await saveStorage(next);
 
-    await saveStorage(next);
-  }
+      setData(next);
+    },
+    []
+  );
 
   return {
     data,
