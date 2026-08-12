@@ -1,19 +1,18 @@
 export interface FlowBreakData {
+  darkMode: boolean;
+
   waterToday: number;
   breakToday: number;
 
   waterGoal: number;
   breakGoal: number;
 
-  streak: number;
-
-  darkMode: boolean;
+  productivityMethod: string;
 
   lastDrink: string | null;
   lastBreak: string | null;
-  nextReminderAt: string | null;
 
-  productivityMethod: string;
+  timerEnd: number | null;
 }
 
 export const DEFAULT_STORAGE: FlowBreakData = {

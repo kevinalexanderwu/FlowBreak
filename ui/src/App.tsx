@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, type CSSProperties } from 'react'
+import { useState } from 'react'
 
 import Header from "./components/Header/Header";
 import ProgressCard from "./components/ProgressCard/ProgressCard";
@@ -11,12 +11,10 @@ import ClockIcon from "./components/icons/ClockIcon";
 import DropIcon from "./components/icons/DropIcon";
 import LeafIcon from "./components/icons/LeafIcon";
 import SettingsIcon from "./components/icons/SettingsIcon";
-import { useStorage } from "./hooks/useStorage";
+import { useFlowBreak } from "./hooks/useFlowBreak";
 import MethodDropdown from "./components/MethodDropdown/MethodDropdown";
 import { PRODUCTIVITY_METHODS } from "./constants/productivityMethods";
-import { useCountdown } from "./hooks/useCountdown";
 import { wellnessTips } from "./constants/wellnessTips";
-import { showNotification } from "./services/notification";
 
 
 
@@ -99,79 +97,38 @@ const wellnessTips = [
   },
 ];
 
-// ── Countdown Hook ────────────────────────────────────────────────────────────
-function useCountdown(initialSeconds: number) {
-  const [seconds, setSeconds] = useState(initialSeconds)
-  const [active, setActive] = useState(true)
-
-  useEffect(() => {
-    if (!active) return
-    if (seconds <= 0) { setActive(false); return }
-    const id = setInterval(() => setSeconds(s => s - 1), 1000)
-    return () => clearInterval(id)
-  }, [seconds, active])
-
-  const reset = useCallback((s: number) => { setSeconds(s); setActive(true) }, [])
-
-  const mm = String(Math.floor(seconds / 60)).padStart(2, '0')
-  const ss = String(seconds % 60).padStart(2, '0')
-  return { seconds, display: `${mm}:${ss}`, reset, active }
-}
-
 // ── App ───────────────────────────────────────────────────────────────────────
 export default function App() {
-  const { data, loading, update } = useStorage();
+  const {
+    data,
+    loading,
+    update,
+    countdown,
+    breakActive,
+    selectedMethod,
+    handleDrinkWater,
+    handleStartBreak,
+    workSeconds,
+  } = useFlowBreak();
 
   const [tipIndex] = useState(() => Math.floor(Math.random() * wellnessTips.length));
   const tip = wellnessTips[tipIndex];
-  const [breakActive, setBreakActive] = useState(false);
   const [waterFlash, setWaterFlash] = useState(false);
   const [breakFlash, setBreakFlash] = useState(false);
 
   const WATER_GOAL = 8;
   const BREAK_GOAL = 5;
 
-  const WORK_SECONDS = data
-    ? (PRODUCTIVITY_METHODS.find(
-        (m) => m.id === data.productivityMethod
-      )?.workMinutes ?? 25) * 60
-    : 25 * 60;
-
-  const countdown = useCountdown(WORK_SECONDS);
-    useEffect(() => {
-    if (countdown.seconds !== 0) return;
-
-    if (nextType === "Water") {
-      showNotification(
-        "💧 Drink Water",
-        "Stay hydrated to keep your focus."
-      );
-    } else {
-      showNotification(
-        "☕ Time for a Break",
-        "Stand up, stretch, and relax for a few minutes."
-      );
-    }
-  }, [countdown.seconds]);
-  useEffect(() => {
-    if ("Notification" in window) {
-      Notification.requestPermission();
-    }
-  }, []);
-  useEffect(() => {
-    countdown.reset(WORK_SECONDS);
-  }, [WORK_SECONDS]);
-
   if (loading || !data) {
     return (
       <div
         style={{
-          width: 380,
+          width: 360,
           height: 600,
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          fontFamily: "Outfit, sans-serif",
+          fontFamily: "'Inter', sans-serif",
         }}
       >
         Loading...
@@ -181,13 +138,6 @@ export default function App() {
   const dark = data.darkMode;
   const waterCount = data.waterToday;
   const breakCount = data.breakToday;
-  const selectedMethod =
-    PRODUCTIVITY_METHODS.find(
-      (m) => m.id === data.productivityMethod
-    ) ?? PRODUCTIVITY_METHODS[0];
-
-  const BREAK_SECONDS = selectedMethod.breakMinutes * 60;
-
 
   const nextType = waterCount <= breakCount ? 'Water' : 'Break'
 
@@ -195,39 +145,6 @@ export default function App() {
     ((waterCount / WATER_GOAL + breakCount / BREAK_GOAL) / 2) * 100
   )
 
-  const handleDrinkWater = async () => {
-    if (waterCount >= WATER_GOAL) return;
-
-    await update((old) => ({
-      ...old,
-      waterToday: old.waterToday + 1,
-      lastDrink: new Date().toISOString(),
-    }));
-
-    setWaterFlash(true);
-    setTimeout(() => setWaterFlash(false), 600);
-
-    countdown.reset(WORK_SECONDS);
-  };
-
-  const handleStartBreak = async () => {
-    if (breakCount >= BREAK_GOAL || breakActive) return;
-
-    setBreakActive(true);
-    setBreakFlash(true);
-
-    setTimeout(() => setBreakFlash(false), 600);
-
-    setTimeout(async () => {
-      await update((old) => ({
-        ...old,
-        breakToday: old.breakToday + 1,
-        lastBreak: new Date().toISOString(),
-      }));
-
-      setBreakActive(false);
-    }, 5 * 60 * 1000);
-  };
 
   const getGreeting = () => {
     const h = new Date().getHours()
@@ -307,7 +224,7 @@ export default function App() {
             countdown={countdown}
             nextType={nextType}
             breakActive={breakActive}
-            NEXT_WATER_SECS={WORK_SECONDS}
+            NEXT_WATER_SECS={workSeconds}
             ClockIcon={ClockIcon}
             DropIcon={DropIcon}
             CoffeeIcon={CoffeeIcon}
